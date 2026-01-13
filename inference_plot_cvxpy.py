@@ -8,8 +8,8 @@ Setup
 ----------
 
 * Create a virtual environment with pytorch and cvxpy.
-* Create a training dataset (e.g. `make_dataset_certes_cvxpy_v0.py`).
-* Train the model (see `README_AH.py`).
+* Create a training dataset (e.g. `certes_lissi/LP_NN/FS_Net/make_dataset_certes_cvxpy_v0.py`).
+* Train the model (see `certes_lissi/LP_NN/FS_Net/README_AH.py`).
 * Copy `inference_plot_cvxpy.py` into `$HOME_FSNET/`
 
 Run
@@ -17,10 +17,10 @@ Run
 
 ```
 mamba activate cvxpy 
-# example with FSNet + `make_dataset_certes_cvxpy_v0.py`
+# example with FSNet + `certes_lissi/LP_NN/FS_Net/make_dataset_certes_cvxpy_v0.py`
 python inference_plot_cvxpy.py --method FSNet --prob_type convex --prob_name qp --seed 2025  --prob_size 192 238 120 1000 --batch_size 100 --test_size 100
 
-# example with DC3 + `make_dataset_certes_cvxpy_v0.py`
+# example with DC3 + `certes_lissi/LP_NN/FS_Net/make_dataset_certes_cvxpy_v0.py`
 python inference_plot_cvxpy.py --method DC3 --prob_type convex --prob_name qp --seed 2025  --prob_size 192 238 120 1000 --batch_size 100 --test_size 100
 ```
 """

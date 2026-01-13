@@ -39,8 +39,8 @@ FSNet:
   test_val_tol: 1.0e-9
   decay_tol_step: 100
   memory_size: 30   #convex 10 is okay, nonconvex: 20-30
-  max_iter: 50
-  max_diff_iter: 30
+  max_iter: 70 # 50
+  max_diff_iter: 50 #30
   scale: 1000
 
 DC3:
@@ -48,7 +48,7 @@ DC3:
   eq_pen_weight: 10.0
   ineq_pen_weight: 10.0
   corr_lr: 1.0e-7
-  max_corr_steps: 10
+  max_corr_steps: 20 #10
   corr_momentum: 0.5
 
 projection:

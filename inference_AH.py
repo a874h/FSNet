@@ -19,7 +19,10 @@ Run
 ```
 mamba activate cvxpy
 python inference_AH.py --method FSNet --prob_type convex --prob_name qp --seed 2025 --prob_size 15 26 12 1000 --batch_size 100 --test_size 100
+
+python inference_AH.py --method penalty --prob_type convex --prob_name qp --seed 2025 --prob_size 192 238 120  1000 --batch_size 100 --test_size 100
 ```
+
 """
 
 import yaml

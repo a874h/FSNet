@@ -15,8 +15,13 @@ from utils.optimization_utils import *
 from utils.lbfgs import nondiff_lbfgs_solve, hybrid_lbfgs_solve
 from models.neural_networks import MLP
 
+import sys # AH MOD!!
+sys.path.append("/data/aurelien/local/git/certes_lissi/LP_NN") # AH MOD!!
+from TSKMNet.tskm import skm_eq_ineq_batch # AH MOD!!
+
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 torch.set_default_dtype(torch.float64)
+
 
 
 def load_instance(config):
@@ -579,6 +584,30 @@ class Evaluator:
     def _post_process_predictions(self, X_batch, Y_pred_scaled):
         """Apply method-specific post-processing."""
         if self.method in ["penalty", "adaptive_penalty"]:
+            """FSNet notations
+               from  utils/omptimization_utils.py>QPProblem.__init()) 
+                    minimize_y 1/2 * y^T Q y + p^Ty
+                    s.t.       Ay =  x
+                              Gy <= h
+                              L<= x <=U           ????AH should be L<= y <=U
+                ---                              
+                SKM notation: Ax<b, Cx=d
+            """
+            print('HELLO WORLD\n\n')
+            A_test= self.data.G
+            A_test = torch.vstack([A_test,torch.eye(A_test.shape[1]) ]) 
+            A_test = torch.vstack([A_test,-torch.eye(A_test.shape[1]) ]) 
+            b_test= self.data.h
+            b_test = torch.cat([b_test,self.data.U])
+            b_test = torch.cat([b_test,-self.data.L])
+            C_test= self.data.A
+            D_test= X_batch.T
+            Y0= Y_pred_scaled.T
+            beta = 100       # On regarde 10 contraintes à chaque étape
+            lambd = 0.1    # Paramètre de relaxation
+            iter_max = 2000
+            # skm notation: Ax<b, Cx=d
+            Y_pred_scaled  =  skm_eq_ineq_batch(A_test,b_test,C_test,D_test,Y0,lambd, beta, iter_max).T
             return Y_pred_scaled
         elif self.method == "FSNet":
             return nondiff_lbfgs_solve(

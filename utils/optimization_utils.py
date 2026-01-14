@@ -107,7 +107,7 @@ class QPProblem(BaseProblem):
         minimize_y 1/2 * y^T Q y + p^Ty
         s.t.       Ay =  x
                    Gy <= h
-                   L<= x <=U
+                   L<= x <=U           ????AH should be L<= y <=U
     """
 
     def __init__(self, dataset, val_size, test_size, seed):
@@ -132,8 +132,10 @@ class QPProblem(BaseProblem):
         self.partial_unknown_vars = best_partial
         self.other_vars = np.setdiff1d(np.arange(self.ydim), self.partial_vars)
         self.A_partial = self.A[:, self.partial_vars]
-        self.A_other_inv = torch.inverse(self.A[:, self.other_vars])
-        
+        try:   # MOD AH
+            self.A_other_inv = torch.inverse(self.A[:, self.other_vars])
+        except:
+            print("AH:COULD NOT COMPUTE torch.inverse,  DC3 will not run")
 
     def __str__(self):
         return 'QPProblem-{}-{}-{}-{}'.format(

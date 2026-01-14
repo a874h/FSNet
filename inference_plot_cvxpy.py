@@ -22,6 +22,9 @@ python inference_plot_cvxpy.py --method FSNet --prob_type convex --prob_name qp 
 
 # example with DC3 + `certes_lissi/LP_NN/FS_Net/make_dataset_certes_cvxpy_v0.py`
 python inference_plot_cvxpy.py --method DC3 --prob_type convex --prob_name qp --seed 2025  --prob_size 192 238 120 1000 --batch_size 100 --test_size 100
+
+#  penalty+skm
+python inference_plot_cvxpy.py --method penalty --prob_type convex --prob_name qp --seed 2025  --prob_size 192 238 120 1000 --batch_size 100 --test_size 100
 ```
 """
 

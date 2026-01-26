@@ -1,26 +1,17 @@
 """
 Run inference on pre-trained FSNet NN
 
+Evaluate for several param values
+(NB skm runs in 'post processing' mode, to need to change training)
 
-TODO:  load  config from: model_save_content['config']
-
-
-Setup
-----------
-
-* Create a virtual environment with pytorch and cvxpy.
-* Create a training dataset (e.g. `make_dataset_certes.py`).
-* Train the model.
-* Copy `inference_AH.py` into `$HOME_FSNET/`
 
 Run
 -----------
 
 ```
 mamba activate cvxpy
-python inference_AH.py --method FSNet --prob_type convex --prob_name qp --seed 2025 --prob_size 15 26 12 1000 --batch_size 100 --test_size 100
+python inference_AH_postprocess_batch_skm_param_lambda.py --method skm --prob_type convex --prob_name qp --seed 2025 --prob_size 192 238 120  1000 --batch_size 100 --test_size 100
 
-python inference_AH.py --method penalty --prob_type convex --prob_name qp --seed 2025 --prob_size 192 238 120  1000 --batch_size 100 --test_size 100
 ```
 
 """
@@ -31,7 +22,8 @@ import time
 import os, argparse
 from utils.trainer import load_instance, create_model, Evaluator #, Trainer
 
-from TSKMNet.skm import skm_eq_ineq,nullspace_custom,pinv_custom
+from TSKMNet.skm import skm_eq_ineq,nullspace_custom,pinv_custom # MOD AH
+import pandas as pd
 
 
 # Define available problem types and problems
@@ -189,19 +181,41 @@ def main():
     # copied from trainer.py: Trainer.train()
     if hasattr(data, 'test_dataset'):
         # Get test batch sizes from config or use defaults
-        #test_batch_sizes = config.get('test_batch_sizes', [256, 512])      
-        test_batch_sizes = [256]
+        test_batch_sizes = [256] #config.get('test_batch_sizes', [256, 512])      
         print(f"Testing with batch sizes: {test_batch_sizes}")
         # Run evaluation with all batch sizes and collect detailed results for all
-        batch_size_results, all_detailed_results = evaluator.evaluate_multiple_batch_sizes(
-            model, 
-            data.test_dataset, 
-            test_batch_sizes, 
-            "test"
-        )
-        print('all_detailed_results', all_detailed_results )
+        readable_data = []
+        for lambd in [0.1,0.5,0.9,1.0]:
+            evaluator.config_method['lambda']=lambd
+            batch_size_results, all_detailed_results = evaluator.evaluate_multiple_batch_sizes(
+                model, 
+                data.test_dataset, 
+                test_batch_sizes, 
+                "test"
+            )
+            metrics = batch_size_results[256]['metrics']
+            #metrics = all_detailed_results['256']['metrics']
+            row = {
+                #'Batch Size': batch_size,
+                'lambda': lambd,
+                'Opt Gap Mean (%)': f"{metrics['opt_gap_mean']*100:.4f}",
+                'Opt Gap Std (%)': f"{metrics['opt_gap_std']*100:.4f}",
+                'Opt Gap Max (%)': f"{metrics['opt_gap_max']*100:.4f}",
+                'Eq Violation Mean': f"{metrics['eq_violation_l1_mean']:.2e}",
+                'Eq Violation Max': f"{metrics['eq_violation_l1_max']:.2e}",
+                'Ineq Violation Mean': f"{metrics['ineq_violation_l1_mean']:.2e}",
+                'Ineq Violation Max': f"{metrics['ineq_violation_l1_max']:.2e}",
+                'Average Batch Time (s)': f"{metrics['avg_inference_time']:.4f}",
+            }
+            readable_data.append(row)
+        #print('all_detailed_results', all_detailed_results 
+        df_readable = pd.DataFrame(readable_data)
+        #df_readable_styled = df_readable.style.set_properties(**{'text-align': 'center'})
+        #display(df_readable_styled)
+        print(df_readable)
     else:
         raise ValueError('data.test_dataset does not exist')
 
 if __name__ == "__main__":
     main()
+

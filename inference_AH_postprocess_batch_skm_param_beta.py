@@ -1,26 +1,17 @@
 """
 Run inference on pre-trained FSNet NN
 
+Evaluate for several param values
+(NB skm runs in 'post processing' mode, to need to change training)
 
-TODO:  load  config from: model_save_content['config']
-
-
-Setup
-----------
-
-* Create a virtual environment with pytorch and cvxpy.
-* Create a training dataset (e.g. `make_dataset_certes.py`).
-* Train the model.
-* Copy `inference_AH.py` into `$HOME_FSNET/`
 
 Run
 -----------
 
 ```
 mamba activate cvxpy
-python inference_AH.py --method FSNet --prob_type convex --prob_name qp --seed 2025 --prob_size 15 26 12 1000 --batch_size 100 --test_size 100
+python inference_AH_postprocess_batch_skm_param_beta.py --method skm --prob_type convex --prob_name qp --seed 2025 --prob_size 192 238 120  1000 --batch_size 100 --test_size 100
 
-python inference_AH.py --method penalty --prob_type convex --prob_name qp --seed 2025 --prob_size 192 238 120  1000 --batch_size 100 --test_size 100
 ```
 
 """
@@ -189,17 +180,18 @@ def main():
     # copied from trainer.py: Trainer.train()
     if hasattr(data, 'test_dataset'):
         # Get test batch sizes from config or use defaults
-        #test_batch_sizes = config.get('test_batch_sizes', [256, 512])      
-        test_batch_sizes = [256]
+        test_batch_sizes = [256] #config.get('test_batch_sizes', [256, 512])      
         print(f"Testing with batch sizes: {test_batch_sizes}")
         # Run evaluation with all batch sizes and collect detailed results for all
-        batch_size_results, all_detailed_results = evaluator.evaluate_multiple_batch_sizes(
-            model, 
-            data.test_dataset, 
-            test_batch_sizes, 
-            "test"
-        )
-        print('all_detailed_results', all_detailed_results )
+        for beta in [10,50,100]:
+            evaluator.config_method['beta']=beta
+            batch_size_results, all_detailed_results = evaluator.evaluate_multiple_batch_sizes(
+                model, 
+                data.test_dataset, 
+                test_batch_sizes, 
+                "test"
+            )
+        #print('all_detailed_results', all_detailed_results )
     else:
         raise ValueError('data.test_dataset does not exist')
 

@@ -4,6 +4,9 @@ import time
 import argparse
 from utils.trainer import load_instance, Trainer
 
+from TSKMNet.skm import skm_eq_ineq,nullspace_custom,pinv_custom # MOD AH
+
+
 # Define available problem types and problems
 PROBLEM_TYPES = ['convex', 'nonconvex', 'nonsmooth_nonconvex']
 PROBLEM_NAMES = ['qp', 'qcqp', 'socp']
@@ -130,6 +133,20 @@ def main():
     
     # Instantiate and use the Trainer
     trainer = Trainer(data=data, config=config, save_dir=result_save_dir)
+    
+    if config['method']=='skm':
+        C = data.A
+        N, u, s, vh =nullspace_custom(C, rcond=None, overwrite_a=False, check_finite=True,
+                                    lapack_driver='gesdd')
+        Cinv = pinv_custom(u,s,vh)
+        nullspace_precompute = {}
+        nullspace_precompute['N']=N
+        nullspace_precompute['u']=u
+        nullspace_precompute['s']=s
+        nullspace_precompute['vh']=vh
+        nullspace_precompute['Cinv']=Cinv
+        trainer.evaluator.nullspace_precompute=nullspace_precompute
+
     trainer.train() # Assuming train method handles both training and testing/evaluation
     
     training_time = time.time() - start_time

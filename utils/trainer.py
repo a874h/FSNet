@@ -143,7 +143,9 @@ class Trainer:
             return self._dc3_loss(X_batch, Y_pred_scaled, metrics)
         elif self.method == "projection":
             return self._projection_loss(X_batch, Y_pred_scaled, metrics)
-        
+        elif self.method == "skm": # MOD AH
+            #like "penalty"
+            return self._penalty_loss(X_batch, Y_pred_scaled, metrics)
 
     def _penalty_loss(self, X_batch: torch.Tensor, Y_pred_scaled: torch.Tensor, metrics: Dict) -> Tuple[torch.Tensor, Dict[str, float]]:
         """Computes the penalty loss."""
@@ -585,6 +587,9 @@ class Evaluator:
     def _post_process_predictions(self, X_batch, Y_pred_scaled):
         """Apply method-specific post-processing."""
         if self.method in ["penalty", "adaptive_penalty"]:
+            return Y_pred_scaled
+        #if self.method in ["penalty", "adaptive_penalty"]:
+        elif self.method in ["skm"]:
             """FSNet notations
                from  utils/omptimization_utils.py>QPProblem.__init()) 
                     minimize_y 1/2 * y^T Q y + p^Ty
@@ -594,7 +599,7 @@ class Evaluator:
                 ---                              
                 SKM notation: Ax<b, Cx=d
             """
-            print('HELLO WORLD\n\n')
+            #print('HELLO WORLD\n\n')
             A_test= self.data.G
             A_test = torch.vstack([A_test,torch.eye(A_test.shape[1]) ]) 
             A_test = torch.vstack([A_test,-torch.eye(A_test.shape[1]) ]) 
@@ -604,9 +609,12 @@ class Evaluator:
             C_test= self.data.A
             D_test= X_batch.T
             Y0= Y_pred_scaled.T
-            beta = 100       # On regarde 10 contraintes à chaque étape
-            lambd = 0.1    # Paramètre de relaxation
-            iter_max = 2000
+            beta=self.config_method.get('beta')
+            lambd= self.config_method.get('lambda')
+            iter_max=self.config_method.get('iter_max')
+            #beta = 100       # On regarde 10 contraintes à chaque étape
+            #lambd = 0.1    # Paramètre de relaxation
+            #iter_max = 2000
             # skm notation: Ax<b, Cx=d
             #Y_pred_scaled  =  skm_eq_ineq_batch(A_test,b_test,C_test,D_test,Y0,lambd, beta, iter_max).T
             Y_pred_scaled  = block_skm_eq_ineq(A_test,b_test,C_test,D_test,Y0,
@@ -627,7 +635,8 @@ class Evaluator:
         elif self.method == "projection":
             return self.data.qpth_projection(X_batch, Y_pred_scaled)
         else:
-            return Y_pred_scaled
+            raise ValueError
+            #return Y_pred_scaled
     
     def _compute_batch_metrics(self, X_batch, Y_final, Y_true):
         """Compute comprehensive metrics for a batch."""

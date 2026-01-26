@@ -30,6 +30,15 @@ adaptive_penalty:
   ineq_pen_weight: 30.0
   increasing_rate: 2.0
 
+skm:
+  obj_weight: 1.0
+  eq_pen_weight: 50.0
+  ineq_pen_weight: 50.0
+  beta : 100     
+  #lambda:  0.1    # Paramètre de relaxation
+  lambda:  1.0    # Paramètre de relaxation
+  iter_max : 2000
+
 FSNet:
   obj_weight: 1.0
   dist_weight: 5.0

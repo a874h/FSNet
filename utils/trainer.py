@@ -17,7 +17,8 @@ from models.neural_networks import MLP
 
 import sys # AH MOD!!
 sys.path.append("/data/aurelien/local/git/certes_lissi/LP_NN") # AH MOD!!
-from TSKMNet.tskm import skm_eq_ineq_batch # AH MOD!!
+#from TSKMNet.tskm import skm_eq_ineq_batch # AH MOD!!
+from TSKMNet.tskm_block import block_skm_eq_ineq
 
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 torch.set_default_dtype(torch.float64)
@@ -607,7 +608,10 @@ class Evaluator:
             lambd = 0.1    # Paramètre de relaxation
             iter_max = 2000
             # skm notation: Ax<b, Cx=d
-            Y_pred_scaled  =  skm_eq_ineq_batch(A_test,b_test,C_test,D_test,Y0,lambd, beta, iter_max).T
+            #Y_pred_scaled  =  skm_eq_ineq_batch(A_test,b_test,C_test,D_test,Y0,lambd, beta, iter_max).T
+            Y_pred_scaled  = block_skm_eq_ineq(A_test,b_test,C_test,D_test,Y0,
+                                lambd, beta, iter_max,
+                            nullspace_precompute=self.nullspace_precompute).T
             return Y_pred_scaled
         elif self.method == "FSNet":
             return nondiff_lbfgs_solve(

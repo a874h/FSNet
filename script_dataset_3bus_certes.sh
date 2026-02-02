@@ -34,4 +34,4 @@ do
   python dataset/convex/qp/make_dataset_certes_cvxpy_v0.py --path_out $path_out --pv_gen_noise $pv_gen_noise --demand_noise $demand_noise --num_examples $num_examples --seed $i&  
 done
 
-mamba activate
+mamba deactivate

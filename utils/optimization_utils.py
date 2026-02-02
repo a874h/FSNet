@@ -4,8 +4,8 @@ import torch
 from torch.utils.data import TensorDataset, random_split
 import cvxpy as cp
 # from cvxpylayers.torch import CvxpyLayer
-import casadi as ca
-from qpth.qp import QPFunction
+#import casadi as ca   # MOD AH
+#from qpth.qp import QPFunction  # MOD AH
 
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 torch.set_default_dtype(torch.float64)

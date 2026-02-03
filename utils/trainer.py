@@ -392,8 +392,10 @@ class Trainer:
             # Train for one epoch
             self.model.train()
             epoch_metrics = self.train_epoch(train_loader, epoch)
+            epoch_end = time.time() # MOD AH
+            epoch_metrics['epoch_time']=epoch_end - epoch_start
             train_history.append({'epoch': epoch, **epoch_metrics})
-            epoch_end = time.time()
+            #epoch_end = time.time() # MOD AH
        
             # Log metrics
             print(f"Epoch {epoch + 1}/{self.config['num_epochs']}, "

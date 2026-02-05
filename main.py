@@ -32,9 +32,9 @@ def create_parser():
     parser.add_argument('--ablation', type=bool, default=False)
 
     # Dataset parameters
-    parser.add_argument('--batch_size', type=int, help='Batch size for training')
-    parser.add_argument('--val_size', type=int, help='Size of validation dataset')
-    parser.add_argument('--test_size', type=int, help='Size of test dataset')
+    parser.add_argument('--batch_size', type=int, help='Batch size for training',default=512)
+    parser.add_argument('--val_size', type=int, help='Size of validation dataset',default=512)
+    parser.add_argument('--test_size', type=int, help='Size of test dataset',default=512)
     parser.add_argument('--dropout', type=float, help='Dropout rate for the model')
 
     # Neural network parameters
@@ -135,7 +135,7 @@ def main():
     trainer = Trainer(data=data, config=config, save_dir=result_save_dir)
     
     if config['method']=='skm':
-        C = data.A
+        C = data.A.cpu()
         N, u, s, vh =nullspace_custom(C, rcond=None, overwrite_a=False, check_finite=True,
                                     lapack_driver='gesdd')
         Cinv = pinv_custom(u,s,vh)

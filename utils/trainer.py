@@ -70,6 +70,7 @@ def load_instance(config):
     )
     
     # Load dataset
+    print('filepath=',filepath)
     with open(filepath, 'rb') as f:
         dataset = pickle.load(f)
     

@@ -604,8 +604,8 @@ class Evaluator:
             """
             #print('HELLO WORLD\n\n')
             A_test= self.data.G
-            A_test = torch.vstack([A_test,torch.eye(A_test.shape[1]) ]) 
-            A_test = torch.vstack([A_test,-torch.eye(A_test.shape[1]) ]) 
+            A_test = torch.vstack([A_test,torch.eye(A_test.shape[1]).to(DEVICE) ]) 
+            A_test = torch.vstack([A_test,-torch.eye(A_test.shape[1]).to(DEVICE) ]) 
             b_test= self.data.h
             b_test = torch.cat([b_test,self.data.U])
             b_test = torch.cat([b_test,-self.data.L])
@@ -622,7 +622,8 @@ class Evaluator:
             #Y_pred_scaled  =  skm_eq_ineq_batch(A_test,b_test,C_test,D_test,Y0,lambd, beta, iter_max).T
             Y_pred_scaled  = block_skm_eq_ineq(A_test,b_test,C_test,D_test,Y0,
                                 lambd, beta, iter_max,
-                            nullspace_precompute=self.nullspace_precompute).T
+                            nullspace_precompute=self.nullspace_precompute,
+                            device=DEVICE).T
             return Y_pred_scaled
         elif self.method == "FSNet":
             return nondiff_lbfgs_solve(

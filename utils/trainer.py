@@ -17,6 +17,7 @@ from models.neural_networks import MLP
 
 import sys # AH MOD!!
 sys.path.append("/data/aurelien/local/git/certes_lissi/LP_NN") # AH MOD!!
+sys.path.append("/home/lissi-lab/aurelien/git/certes_lissi/LP_NN")
 #from TSKMNet.tskm import skm_eq_ineq_batch # AH MOD!!
 from TSKMNet.tskm_block import block_skm_eq_ineq
 

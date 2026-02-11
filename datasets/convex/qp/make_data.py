@@ -1,11 +1,17 @@
 import numpy as np
 import pickle
 import cvxpy as cp
+import time
+import tqdm
 
-num_var = 200
-num_ineq = 100
-num_eq = 100
-num_examples = 20000
+#num_var = 200
+#num_ineq = 100
+#num_eq = 100
+num_var = 100
+num_ineq = 50
+num_eq = 50
+num_examples = 1000
+
 
 print("QP problem with {} variables, {} inequalities, {} equalities and {} examples".format(num_var, num_ineq, num_eq, num_examples))
 seed = 2025
@@ -32,17 +38,24 @@ data = {'Q':Q,
         'XU':XU,
         'Y':[]}
 Y = []
-for n in range(num_examples):
+solve_time = []
+for n in tqdm.tqdm(range(num_examples)):
     Xi = X[n]
     y = cp.Variable(num_var)
     prob = cp.Problem(cp.Minimize((1 / 2) * cp.quad_form(y, Q) + p.T @ y),
                         [G @ y <= h, y <= U, y >= L,
                         A @ y == Xi])
+    start_time = time.time()
     prob.solve()
-    print(n, np.max(y.value), np.min(y.value), y.value[0:5].T, end='\r')
+    solve_time.append( time.time() - start_time )
+    #print(n, np.max(y.value), np.min(y.value), y.value[0:5].T, end='\r')
     Y.append(y.value)
 data['Y'] = np.array(Y)
-
+data['solve_time']=solve_time
+data['solve_time_avg']=np.mean(solve_time)
+print('solve_time_avg:', data['solve_time_avg'])
+data['solve_time_std']=np.std(solve_time)
+print('solve_time_std:', data['solve_time_std'])
 
 i = 0
 det_min = 0
@@ -59,8 +72,9 @@ while i < 1000:
 print('best_det', det_min)
 data['best_partial'] = best_partial
 
-
-with open("datasets/convex/qp/random{}_qp_dataset_var{}_ineq{}_eq{}_ex{}".format(seed, num_var, num_ineq, num_eq, num_examples), 'wb') as f:
+#filename = "datasets/convex/qp/random{}_qp_dataset_var{}_ineq{}_eq{}_ex{}".format(seed, num_var, num_ineq, num_eq, num_examples)
+filename = "random{}_qp_dataset_var{}_ineq{}_eq{}_ex{}".format(seed, num_var, num_ineq, num_eq, num_examples)
+with open(filename, 'wb') as f:
     pickle.dump(data, f)
 
 print("Finished generating QP dataset")

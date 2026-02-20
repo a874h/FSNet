@@ -26,11 +26,12 @@ def load_results(file_path):
         print(f"Error loading {file_path}: {e}")
         return None 
 
-"""
-method = "penalty"#"DC3"##"FSNet" #
+
+#method = "penalty"#"DC3"##"FSNet" #
 prob_type = "convex"
 prob_name = "qp"
 seed = 2025
+"""
 #fname = "Problem-100-50-50-10000"
 #fname = "Problem-360-432-288-10000"
 fname = "Problem-192-238-120-10000"

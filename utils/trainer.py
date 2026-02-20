@@ -578,8 +578,11 @@ class Evaluator:
         # Aggregate metrics
         aggregated_metrics = self._aggregate_metrics(all_metrics)
         aggregated_metrics['total_time'] = total_time
-        aggregated_metrics['avg_inference_time'] = total_time / len(data_loader)
-        
+        try:
+           aggregated_metrics['avg_inference_time'] = total_time / len(data_loader)
+        except:
+           print('ERROR len(data_loader)==0 ???') 
+
         # Print summary
         self._print_evaluation_summary(split_name, aggregated_metrics)
         

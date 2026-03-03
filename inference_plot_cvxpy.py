@@ -24,7 +24,7 @@ python inference_plot_cvxpy.py --method FSNet --prob_type convex --prob_name qp 
 python inference_plot_cvxpy.py --method DC3 --prob_type convex --prob_name qp --seed 2025  --prob_size 192 238 120 1000 --batch_size 100 --test_size 100
 
 #  penalty+skm
-python inference_plot_cvxpy.py --method penalty --prob_type convex --prob_name qp --seed 2025  --prob_size 192 238 120 1000 --batch_size 100 --test_size 100
+python inference_plot_cvxpy.py --method skm --prob_type convex --prob_name qp --seed 2025  --prob_size 192 238 120 1000 --batch_size 100 --test_size 100
 ```
 """
 
@@ -32,6 +32,8 @@ python inference_plot_cvxpy.py --method penalty --prob_type convex --prob_name q
 import sys
 sys.path.append("/data/aurelien/local/git/certes_lissi/LP_NN")
 from test_cvxpy_3_bus_24hrs_battery_PV import * # AH: this is new
+
+from TSKMNet.skm import skm_eq_ineq,nullspace_custom,pinv_custom # MOD AH
 
 # copied from test_cvxpy_3_bus_24hrs_battery_PV
 # TODO: add as a CLI param ?
@@ -183,7 +185,20 @@ def main():
 
     # Initialize Evaluator    
     evaluator = Evaluator(data, config['method'], config)
-                
+
+    if config['method']=='skm':
+        C = data.A.cpu()
+        N, u, s, vh =nullspace_custom(C, rcond=None, overwrite_a=False, check_finite=True,
+                                    lapack_driver='gesdd')
+        Cinv = pinv_custom(u,s,vh)
+        nullspace_precompute = {}
+        nullspace_precompute['N']=N
+        nullspace_precompute['u']=u
+        nullspace_precompute['s']=s
+        nullspace_precompute['vh']=vh
+        nullspace_precompute['Cinv']=Cinv
+        evaluator.nullspace_precompute=nullspace_precompute
+
     # copied from trainer.py: Trainer.train()
     if hasattr(data, 'test_dataset'):
         # Get test batch sizes from config or use defaults

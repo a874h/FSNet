@@ -176,7 +176,20 @@ def main():
 
     # Initialize Evaluator    
     evaluator = Evaluator(data, config['method'], config)
-                
+
+    if config['method']=='skm':
+        C = data.A.cpu()
+        N, u, s, vh =nullspace_custom(C, rcond=None, overwrite_a=False, check_finite=True,
+                                    lapack_driver='gesdd')
+        Cinv = pinv_custom(u,s,vh)
+        nullspace_precompute = {}
+        nullspace_precompute['N']=N
+        nullspace_precompute['u']=u
+        nullspace_precompute['s']=s
+        nullspace_precompute['vh']=vh
+        nullspace_precompute['Cinv']=Cinv
+        trainer.evaluator.nullspace_precompute=nullspace_precompute
+
     # copied from trainer.py: Trainer.train()
     if hasattr(data, 'test_dataset'):
         # Get test batch sizes from config or use defaults

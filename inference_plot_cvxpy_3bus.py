@@ -227,6 +227,7 @@ def plot(results):
     results: dict
     detailed results outputted by FSNet inference
     """
+    raise DeprecationWarning('outdated: see inference_plot_compare_classical')
     # extract y predicted by nn
     # NB: size is 15 with make_dataset_AH.py
     Y_final = results[256][0]['Y_final']  # Q !!!! why results[256] is working ???  calling param is 100

@@ -1,38 +1,56 @@
 """
-!!!!!!!!! NOT WORKING YET !!!!!!!!!!!!!!
-!!!!!!!!! WORK IN PROGRESS !!!!!!!!!!!!!
-
 Run + plot inference on pre-trained FSNet NN
-when dataset is built from pypsa model in make_dataset_certes.py
+COMPARE TO CLASSICAL
+when dataset is built from cvxpy model in make_dataset_certes_cvxpy_v0.py
 
-TODO: !!!! both PYPSA and pytorch are needed => WHICH VENV????? !!!!!
-      IDEA: 1-in inference_AH.py, save detailed results in pickle (venv= mamba:pytorch/cvxpy)        
-            2-in inference_plot.py, keep only load pickle + plot (venv = UV:pypsa) 
 TODO:  load  config from: model_save_content['config']
 
 Setup
 ----------
 
 * Create a virtual environment with pytorch and cvxpy.
-* Create a training dataset (e.g. `make_dataset_certes.py`).
-* Train the model (see `README_AH.py`).
-* Copy `inference_plot.py` into `$HOME_FSNET/`
+* Create a training dataset (e.g. `certes_lissi/LP_NN/FS_Net/make_dataset_certes_cvxpy_v0.py`).
+* Train the model (see `certes_lissi/LP_NN/FS_Net/README_AH.py`).
+* Copy `inference_plot_cvxpy.py` into `$HOME_FSNET/`
 
 Run
 -----------
 
 ```
-mamba activate cvxpy ??????????
-# example with `make_dataset_certes.py`
-python inference_plot.py  ?????????????????????????????????
+3BUS
+mamba activate cvxpy 
+# FSNet + `certes_lissi/LP_NN/FS_Net/make_dataset_certes_cvxpy_v0.py`
+python inference_plot_compare_classical.py --method FSNet --prob_type convex --prob_name qp --seed 2025  --prob_size 192 238 120 1000 --batch_size 100 --test_size 100
+
+# DC3 + `certes_lissi/LP_NN/FS_Net/make_dataset_certes_cvxpy_v0.py`
+python inference_plot_compare_classical.py --method DC3 --prob_type convex --prob_name qp --seed 2025  --prob_size 192 238 120 1000 --batch_size 100 --test_size 100
+
+#  penalty+skm
+python inference_plot_compare_classical.py --method skm --prob_type convex --prob_name qp --seed 2025  --prob_size 192 238 120 1000 --batch_size 100 --test_size 100
+
+9BUS
+# DC3
+python inference_plot_compare_classical.py --method DC3 --prob_type convex --prob_name qp --seed 2025  --prob_size 360 432 288 1000 --batch_size 100 --test_size 100
+
+
 ```
 """
 
 # AH: new stuff
 import sys
 sys.path.append("/data/aurelien/local/git/certes_lissi/LP_NN")
-from tools import map_back_from_cvxpy # AH: this is new
+from test_cvxpy_3_bus_24hrs_battery_PV import * # AH: this is new
+from test_cvxpy_9_bus_24hrs_battery_PV import create_certes_case_9bus,_get_idx
 
+from TSKMNet.skm import skm_eq_ineq,nullspace_custom,pinv_custom # MOD AH
+
+# copied from test_cvxpy_3_bus_24hrs_battery_PV
+# TODO: add as a CLI param ?
+N_B = 3  # Number of buses
+N_G = 2  # Number of generators
+N_BATT = 1 # Number of battery storage units
+T = 24    # Number of time periods (e.g., hours)
+num_vars_per_period = N_G + N_B + N_BATT + N_BATT + N_BATT
 
 import yaml
 import torch
@@ -188,7 +206,7 @@ def main():
         nullspace_precompute['s']=s
         nullspace_precompute['vh']=vh
         nullspace_precompute['Cinv']=Cinv
-        trainer.evaluator.nullspace_precompute=nullspace_precompute
+        evaluator.nullspace_precompute=nullspace_precompute
 
     # copied from trainer.py: Trainer.train()
     if hasattr(data, 'test_dataset'):
@@ -207,41 +225,37 @@ def main():
         raise ValueError('data.test_dataset does not exist')
     return all_detailed_results
 
-def plot(n, results):
+def plot(results,d):
     """
+    copied from: certes_lissi/LP_NN$ mousepad test_cvxpy_3_bus_24hrs_battery_PV.py
     AH func
      Q !!!! why results[256] is working ??? 
 
     parameters:
     ------------
-    n: pypsa model
-
     results: dict
     detailed results outputted by FSNet inference
     """
     # extract y predicted by nn
     # NB: size is 15 with make_dataset_AH.py
     Y_final = results[256][0]['Y_final']  # Q !!!! why results[256] is working ???  calling param is 100
+    Y_true = results[256][0]['Y_true']  # Q !!!! why results[256] is working ???  calling param is 100
     # get just 1 sample 
-    y_final = Y_final[0,:] 
+    idx_sample = 20
+    y_final = Y_final[idx_sample,:] 
+    y_true = Y_true[idx_sample,:] 
+    # CALL PLOTTING FUNC IN CLASSICAL
+    solve_plot_article2(y_true,d)
 
-    # convert from cvxpy format to readable dict (see file test_pypsa_certes_3_bus....)
-    solution = map_back_from_cvxpy(n, y_final)
-    # var_names = ['Generator_p', 'Line_s', 'StorageUnit_p_dispatch', 'StorageUnit_p_store', 'StorageUnit_state_of_charge'] 
-    
-    fig, axes = plt.subplots(3, 2, figsize=(15, 12))
-    # Plot1
-    # below is copied from test_pypsa_certes_3_bus_multiperiod_battery_PV.py
-    axes[0,1].plot(hours, solution['Generator_p'][:,0],
-                label="Conventional Gen", linewidth=2)
-    axes[0,1].plot(hours, solution['Generator_p'][:,1], label="PV Gen", linewidth=2)
-    axes[0,1].set_ylabel('Power (MW)')
-    axes[0,1].set_title('CVXPY (Generation vs Load)')
-    axes[0,1].legend()
-    axes[0,1].grid(True)
 
 if __name__ == "__main__":
     results = main()
-    # load pypsa model used to build dataset
+    # load cvxpy model used to build dataset
     # read and plot results
-    plot(results) # new function
+    nbus = 9
+    if nbus==3:
+        d = create_certes_case_3bus()
+        plot(results,d) # new function
+    elif nbus==9:
+        d= create_certes_case_9bus(noise_demand=None, noise_pv_gen=None)
+        # plot ???

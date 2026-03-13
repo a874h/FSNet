@@ -245,14 +245,14 @@ def plot(results,d):
     y_final = Y_final[idx_sample,:] 
     y_true = Y_true[idx_sample,:] 
     # CALL PLOTTING FUNC IN CLASSICAL
-    solve_plot_article2(y_true,d)
+    solve_plot_article2(y_final,d)
 
 
 if __name__ == "__main__":
     results = main()
     # load cvxpy model used to build dataset
     # read and plot results
-    nbus = 9
+    nbus = 3
     if nbus==3:
         d = create_certes_case_3bus()
         plot(results,d) # new function
